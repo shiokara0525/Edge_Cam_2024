@@ -19,17 +19,17 @@ sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
 sensor.set_windowing((320,240))
-sensor.set_brightness(2)
-sensor.set_vflip(1)
+sensor.set_brightness(1)
+sensor.set_vflip(0)
 
 sensor.run(1)
 #blue_threshold   = [(0, 100, -127, 125, -78, -37)]
-blue_threshold = [(18, 100, -128, 120, -128, -45)]
-yellow_threshold = [(0, 100, -34, 45, 46, 127)]
+blue_threshold = [(7, 74, -117, 94, -113, -17)]
+yellow_threshold = [(51, 68, -15, 94, 38, 77)]
 Y_th = yellow_threshold[0]
 B_th = blue_threshold[0]
-GAIN = 60.0
-WHITE_GAIN = (83.0, 64.0, 121.0)
+GAIN = 0.0
+WHITE_GAIN = (89.0, 64.0, 110.0)
 
 myroi = (0,90,320,110)
 senter = (150,0,20,240)
@@ -121,9 +121,10 @@ while True:
             if Flag!=0:     #敵がいたと検知されたら
                 tmp=img.draw_line(range_s,target_b[1],range_f,target_b[1],color=(0,0,200),thickness=10)
                 if 8-robot_range[1]<robot_range[0]:     #なんかいろいろ都合のいいようにするやつ(何かいてるかわからん)
-                    x_b=int(target_b[0]+width_b*robot_range[0]/2)
+                    x_b=int(target_b[0]+width_b*robot_range[0] * 1.2/2)
                 else:
-                    x_b=int(target_b[0]+width_b*(8+robot_range[1])/2)
+                    x_b=int(target_b[0]+width_b*(8+robot_range[1]) * 1.2/2)
+                print(x_b)
 
                 if (100<range_s or range_f<140)or(range_s<100 and 140<range_f):
                     senter_flag=0
