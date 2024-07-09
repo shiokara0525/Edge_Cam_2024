@@ -31,6 +31,8 @@ B_th = blue_threshold[0]
 GAIN = 0.0
 WHITE_GAIN = (89.0, 64.0, 110.0)
 
+confidencial = 0.25
+
 myroi = (0,90,320,110)
 senter = (150,0,20,240)
 senter_flag = 0
@@ -121,9 +123,9 @@ while True:
             if Flag!=0:     #敵がいたと検知されたら
                 tmp=img.draw_line(range_s,target_b[1],range_f,target_b[1],color=(0,0,200),thickness=10)
                 if 8-robot_range[1]<robot_range[0]:     #なんかいろいろ都合のいいようにするやつ(何かいてるかわからん)
-                    x_b=int(target_b[0]+width_b*robot_range[0] * 1.2/2)
+                    x_b=int((1 - confidencial) * target_b[0] + confidencial * renge_s)
                 else:
-                    x_b=int(target_b[0]+width_b*(8+robot_range[1]) * 1.2/2)
+                    x_b=int((1 - confidencial) * (target_b[0] + target_b[3]) + confidencial * renge_f)
                 print(x_b)
 
                 if (100<range_s or range_f<140)or(range_s<100 and 140<range_f):
@@ -183,12 +185,13 @@ while True:
             range_s=int(target_w[0]+width_y*robot_range[0])
             range_f=int(target_w[0]+width_y*robot_range[1])
 
-            if Flag!=0:
-                tmp=img.draw_line(range_s,target_w[1],range_f,target_w[1],color=(0,0,200),thickness=10)
-                if 8-robot_range[1]<robot_range[0]:
-                    x_y=int(target_w[0]+width_y*robot_range[0]/2)
+            if Flag!=0:     #敵がいたと検知されたら
+                tmp=img.draw_line(range_s,target_b[1],range_f,target_b[1],color=(0,0,200),thickness=10)
+                if 8-robot_range[1]<robot_range[0]:     #なんかいろいろ都合のいいようにするやつ(何かいてるかわからん)
+                    x_y =int((1 - confidencial) * target_y[0] + confidencial * renge_s)
                 else:
-                    x_y=int(target_w[0]+width_y*(8+robot_range[1])/2)
+                    x_y =int((1 - confidencial) * (target_y[0] + target_y[3]) + confidencial * renge_f)
+                print(x_y)
 
                 if (100<range_s or range_f<140)or(range_s<100 and 140<range_f):
                     senter_flag=0
