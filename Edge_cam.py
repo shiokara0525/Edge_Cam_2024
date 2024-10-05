@@ -9,7 +9,7 @@ fm.register(34, fm.fpioa.UART1_RX, force=True)
 
 fm.register(18, fm.fpioa.GPIO1)
 ButonA=GPIO(GPIO.GPIO1, GPIO.IN, GPIO.PULL_UP)
-fm.register(19, fm.fpioa.GPIO2)
+fm.       register(19, fm.fpioa.GPIO2)
 ButonB=GPIO(GPIO.GPIO2, GPIO.IN, GPIO.PULL_UP)
 
 uart = UART(UART.UART1, 115200,8,0,0, timeout=1000, read_buf_len=4096)
@@ -19,21 +19,20 @@ sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
 sensor.set_windowing((320,240))
-sensor.set_brightness(1)
+sensor.set_brightness(0)
 sensor.set_vflip(0)
-
 sensor.run(1)
 #blue_threshold   = [(0, 100, -127, 125, -78, -37)]
-blue_threshold = [(7, 74, -117, 94, -113, -17)]
-yellow_threshold = [(51, 68, -15, 94, 38, 77)]
+blue_threshold = [(0, 100, -128, 127, -104, -16)]
+yellow_threshold = [(0, 100, -128, 127, 55, 106)]
 Y_th = yellow_threshold[0]
 B_th = blue_threshold[0]
-GAIN = 0.0
-WHITE_GAIN = (89.0, 64.0, 110.0)
+GAIN = 57.0
+WHITE_GAIN = (91.0, 64.0, 106.0)
 
 confidencial = 0.25
 
-myroi = (0,90,320,110)
+myroi = (0,120,320,100)
 senter = (150,0,20,240)
 senter_flag = 0
 A = 1  #0なら青　1なら黄色
@@ -44,6 +43,9 @@ clock = time.clock()
 
 sensor.set_auto_gain(1)
 sensor.set_auto_whitebal(1)
+sensor.set_contrast(2)
+sensor.set_saturation(2)
+
 a = 0
 t = time.ticks_ms()
 
@@ -58,11 +60,13 @@ print(sensor.get_rgb_gain_db())
 sensor.set_auto_gain(False,gain_gb = GAIN,gain_db_ceiling = GAIN)
 sensor.set_auto_whitebal(False,WHITE_GAIN)
 
+#blobs型の配列 0:x 1:y 2:w 3:h 4:n 5:x 6:y
+
 while True:
     senter_flag = 0
     clock.tick()
     img = sensor.snapshot()
-    send_list = [38,0,0,0,0,0,0,37]
+    send_list = [38,0,0,0,0,0,0,0,0,0,0,37] #7こ
 
     if img:     #画像がなかったらエラー起こるからね、しょうがないね
         try:    #よくfind_blobsで例外起こるからｔｒｙ文に入れてる
@@ -102,10 +106,10 @@ while True:
                     if B_th[4]<pixel[2] and pixel[2]<B_th[5]:   #Bの閾値におさまってるか判定
                         tmp=img.draw_cross(int(X),int(Y),color=(0,0,200))
                         H = j           #一番したにある高さを記録
-                        if 2<H - H_old: #隣り合ったピクセルの高さの差を見てるよ ある程度差があったら敵と検知
+                        if 3<H - H_old: #隣り合ったピクセルの高さの差を見てるよ ある程度差があったら敵と検知
                             Flag=1
                             robot_range[0]=i
-                        if H - H_old<-2:
+                        if H - H_old<-3:
                             Flag=1
                             robot_range[1]=i
 
@@ -123,10 +127,10 @@ while True:
             if Flag!=0:     #敵がいたと検知されたら
                 tmp=img.draw_line(range_s,target_b[1],range_f,target_b[1],color=(0,0,200),thickness=10)
                 if 8-robot_range[1]<robot_range[0]:     #なんかいろいろ都合のいいようにするやつ(何かいてるかわからん)
-                    x_b=int((1 - confidencial) * target_b[0] + confidencial * renge_s)
+                    x_b=int((1 - confidencial) * target_b[0] + confidencial * range_s)
                 else:
-                    x_b=int((1 - confidencial) * (target_b[0] + target_b[3]) + confidencial * renge_f)
-                print(x_b)
+                    x_b=int((1 - confidencial) * (target_b[0] + target_b[2]) + confidencial * range_f)
+                    print(x_b)
 
                 if (100<range_s or range_f<140)or(range_s<100 and 140<range_f):
                     senter_flag=0
@@ -136,8 +140,11 @@ while True:
             x_b /= 2    #1バイトにおさまるように2で割ってる
 
             send_list[1] = int(x_b)
-            send_list[2] = int(target_b[3])
-            send_list[3] = int(senter_flag)
+            send_list[2] = int(target_b[0] / 2.0)
+            send_list[3] = int(target_b[1])
+            send_list[4] = int(target_b[2] / 2/0)
+            send_list[5] = int(target_b[3])
+            print(x_b)
 
         if blobs_yellow:    #青色と同じなので割愛
             target_w=blobs_yellow[0]
@@ -168,10 +175,10 @@ while True:
                         if i == 1:
                             H_old = H
 
-                        if 1<H - H_old:
+                        if 3<H - H_old:
                             Flag+=1
                             robot_range[0]=i
-                        if H - H_old<-1:
+                        if H - H_old<-3:
                             Flag+=2
                             robot_range[1]=i-1
 
@@ -186,11 +193,11 @@ while True:
             range_f=int(target_w[0]+width_y*robot_range[1])
 
             if Flag!=0:     #敵がいたと検知されたら
-                tmp=img.draw_line(range_s,target_b[1],range_f,target_b[1],color=(0,0,200),thickness=10)
+                tmp=img.draw_line(range_s,target_w[1],range_f,target_w[1],color=(0,0,200),thickness=10)
                 if 8-robot_range[1]<robot_range[0]:     #なんかいろいろ都合のいいようにするやつ(何かいてるかわからん)
-                    x_y =int((1 - confidencial) * target_y[0] + confidencial * renge_s)
+                    x_y =int((1 - confidencial) * target_w[0] + confidencial * range_s)
                 else:
-                    x_y =int((1 - confidencial) * (target_y[0] + target_y[3]) + confidencial * renge_f)
+                    x_y =int((1 - confidencial) * (target_w[0] + target_w[2]) + confidencial * range_f)
                 print(x_y)
 
                 if (100<range_s or range_f<140)or(range_s<100 and 140<range_f):
@@ -198,9 +205,11 @@ while True:
 
             tmp=img.draw_cross(int(x_y),int(target_w[6]),color=(200,0,0),size=5)
             x_y /= 2
-            send_list[4] = int(x_y)
-            send_list[5] = int(target_w[3])
-            send_list[6] = int(senter_flag)
+            send_list[6] = int(x_y)
+            send_list[7] = int(target_w[0] / 2.0)
+            send_list[8] = int(target_w[1])
+            send_list[9] = int(target_w[2] / 2.0)
+            send_list[10] = int(target_w[3])
 
     send = bytearray(send_list) #int型の変数たちをバイト型に変換
     uart.write(send)            #バイト型変数をteensyに送っちゃう
