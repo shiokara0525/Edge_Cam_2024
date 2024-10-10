@@ -66,7 +66,7 @@ while True:
     senter_flag = 0
     clock.tick()
     img = sensor.snapshot()
-    send_list = [38,0,0,0,0,0,0,0,0,0,0,37] #7こ
+    send_list = [255,0,0,0,0,0,0,254] #7こ
 
     if img:     #画像がなかったらエラー起こるからね、しょうがないね
         try:    #よくfind_blobsで例外起こるからｔｒｙ文に入れてる
@@ -139,12 +139,14 @@ while True:
             tmp=img.draw_cross(int(x_b),int(target_b[6]),color=(200,0,0),size=5)
             x_b /= 2    #1バイトにおさまるように2で割ってる
 
-            send_list[1] = int(x_b)
-            send_list[2] = int(target_b[0] / 2.0)
-            send_list[3] = int(target_b[1])
-            send_list[4] = int(target_b[2] / 2/0)
-            send_list[5] = int(target_b[3])
-            print(x_b)
+            send_list[1] = int(1)
+            send_list[2] = int(x_b)
+            send_list[3] = int(target_b[0] / 2.0)
+            send_list[4] = int(target_b[1])
+            send_list[5] = int(target_b[2] / 2.0)
+            send_list[6] = int(target_b[3])
+            send = bytearray(send_list)
+            uart.write(send)
 
         if blobs_yellow:    #青色と同じなので割愛
             target_w=blobs_yellow[0]
@@ -205,11 +207,11 @@ while True:
 
             tmp=img.draw_cross(int(x_y),int(target_w[6]),color=(200,0,0),size=5)
             x_y /= 2
-            send_list[6] = int(x_y)
-            send_list[7] = int(target_w[0] / 2.0)
-            send_list[8] = int(target_w[1])
-            send_list[9] = int(target_w[2] / 2.0)
-            send_list[10] = int(target_w[3])
-
-    send = bytearray(send_list) #int型の変数たちをバイト型に変換
-    uart.write(send)            #バイト型変数をteensyに送っちゃう
+            send_list[1] = int(1)
+            send_list[2] = int(x_y)
+            send_list[3] = int(target_w[0] / 2.0)
+            send_list[4] = int(target_w[1])
+            send_list[5] = int(target_w[2] / 2.0)
+            send_list[6] = int(target_w[3])
+            send = bytearray(send_list)
+            uart.write(send)
